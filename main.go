@@ -131,8 +131,8 @@ func main() {
 		Description: "Get rating of the player",
 		Options: []*discordgo.ApplicationCommandOption{
 			{
-				Name:        "player-id",
-				Description: "The osu id of the player",
+				Name:        "player",
+				Description: "The osu id or username of the player",
 				Type:        discordgo.ApplicationCommandOptionString,
 				Required:    true,
 			},
