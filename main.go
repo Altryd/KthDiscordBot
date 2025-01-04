@@ -9,9 +9,11 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
+	"io/ioutil"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -23,6 +25,12 @@ type Config struct {
 
 type discordHandler struct {
 	config Config
+}
+
+type discordServerIDs struct {
+	ParentIDDiscordServer  string `json:"id_discord_server"`
+    ParentIDChannelText    string `json:"id_text_channel"`
+    ParentIDVoiceText      string `json:"id_voice_channel"`
 }
 
 func main() {
@@ -123,6 +131,24 @@ func main() {
 				Description: "Team member",
 				Required:    false,
 			},
+			{
+				Type:        discordgo.ApplicationCommandOptionString,
+				Name:        "custom-color",
+				Description: "pick your custom color",
+				Required:    false,
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionChannel,
+				Name:        "text-category",
+				Description: "set a category where your text chat is going to be located",
+				Required:    false,
+			},
+			{
+				Type:        discordgo.ApplicationCommandOptionChannel,
+				Name:        "voice-category",
+				Description: "set a category where your voice chat is going to be located",
+				Required:    false,
+			},
 		},
 	}
 
@@ -157,6 +183,7 @@ func main() {
 	fmt.Println("Bot running. Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
+
 	<-sc
 
 	// Clean up
@@ -175,6 +202,7 @@ func main() {
 	}
 	discord.Close()
 }
+
 
 func (dh *discordHandler) ready(s *discordgo.Session, m *discordgo.Ready) {
 	s.UpdateListeningStatus("Listening")
@@ -311,14 +339,118 @@ func handleCreateTeam(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 
 	if hasRole(member.Roles, "Секретарь ЦК импрува", s, i.GuildID) {
-
 		//var userIDs []string
+	    //user := options[1].UserValue(s)
 
+	    //locals
 		options := i.ApplicationCommandData().Options
 		roleName := options[0].StringValue()
-		//user := options[1].UserValue(s)
-
 		color := getRandomColor()
+	    ParentIDDiscordServer := "0"
+	    ParentIDChannelText := "0"
+        ParentIDVoiceText := "0"
+
+        // json
+	    fileBytes, err := ioutil.ReadFile("./discord_settings.json")
+	    if err != nil {
+	    	panic(err)
+	    }
+  
+	    var ids discordServerIDs
+    
+	    err = json.Unmarshal(fileBytes, &ids)
+	    if err != nil {
+	    	panic(err)
+	    }
+    
+	    // fmt.Println("ID of Discord Server:", ids.ParentIDDiscordServer)
+	    // fmt.Println("ID of Text Channel:", ids.ParentIDChannelText)
+	    // fmt.Println("ID of Voice Channel:", ids.ParentIDVoiceText)
+    
+        // fmt.Println("[orig] ParentIDChannelText - ", ParentIDChannelText)
+        // fmt.Println("[orig] ParentIDVoiceText - ", ParentIDVoiceText)
+    
+        if ParentIDDiscordServer == ids.ParentIDDiscordServer {
+        	fmt.Println("yup, all good")
+        	ParentIDChannelText = ids.ParentIDChannelText
+            ParentIDVoiceText = ids.ParentIDVoiceText
+            fmt.Println("[yup] ParentIDChannelText - ", ParentIDChannelText)
+            fmt.Println("[yup] ParentIDVoiceText - ", ParentIDVoiceText)
+        } else {
+        	fmt.Println("[bad] ID of Discord Server is different from ID from discord_settings.json file. Text category and voice category are going to be at the firsts categories")
+
+
+        	channels, err := s.GuildChannels(i.GuildID)
+            if err != nil {
+                fmt.Println("error retrieving channels,", err)
+                return
+            }
+
+            textchannels, err := s.GuildChannels(i.GuildID)
+            if err != nil {
+                fmt.Println("error retrieving channels,", err)
+                return
+            }
+        
+            // holding first category
+            var firstCategory *discordgo.Channel
+            var firstVoiceCategory *discordgo.Channel
+        
+            // voice category
+            for _, channel := range channels {
+            if channel.Type == discordgo.ChannelTypeGuildCategory {
+            // check if it has any voice channels
+            for _, child := range channels {
+                if child.ParentID == channel.ID && child.Type == discordgo.ChannelTypeGuildVoice {
+                    firstVoiceCategory = channel
+                    break
+                }
+            }
+            if firstVoiceCategory != nil {
+                break // stop after first category
+                    }
+                }
+            }
+            // check
+            if firstVoiceCategory != nil {
+                fmt.Println("First Category Found:")
+                fmt.Println("VoiceID:", firstVoiceCategory.ID)
+            } else {
+                fmt.Println("No categories found for voice")
+            }
+
+
+
+            // text category
+            for _, textchannel := range textchannels {
+                if textchannel.Type == discordgo.ChannelTypeGuildCategory {
+                    // check if it has any text channels
+                    for _, child := range channels {
+                        if child.ParentID == textchannel.ID && child.Type == discordgo.ChannelTypeGuildText {
+                            firstCategory = textchannel
+                            break
+                        }
+                    }
+                    if firstCategory != nil {
+                        break // stop after finding first category
+                    }
+                }
+            }
+        
+            // check
+            if firstCategory != nil {
+                fmt.Println("First Category Found:")
+                fmt.Println("TextID:", firstCategory.ID)
+            } else {
+                fmt.Println("No categories found for text")
+            }
+
+            ParentIDChannelText = firstCategory.ID
+            ParentIDVoiceText = firstVoiceCategory.ID
+
+        }
+
+    
 		fmt.Printf("Selected role: %s\n", roleName)
 
 		role, err := s.GuildRoleCreate(i.GuildID, &discordgo.RoleParams{
@@ -326,20 +458,55 @@ func handleCreateTeam(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			Color: &color,
 		})
 
-		if err != nil {
-			log.Println("Error creating role:", err)
-			return
-		}
+        // main cases
+        for j := 1; j < len(options); j++ {
 
-		for j := 1; j < len(options); j++ {
-			user := options[j].UserValue(s)
-			err = s.GuildMemberRoleAdd(i.GuildID, user.ID, role.ID)
-			if err != nil {
-				log.Println("Error adding role to member:", err)
-				return
-			}
-		}
-		Respond(s, i, "Team created")
+        	switch options[j].Name {
+
+        	    case "custom-color":
+        	    	cs := options[j].StringValue()
+			        cs_output := cs[1:]
+			        value, err := strconv.ParseInt(cs_output, 16, 32)
+
+			        color = int(value)
+
+			        fmt.Printf("Selected role: %s\n", roleName)
+
+		            s.GuildRoleCreate(i.GuildID, &discordgo.RoleParams{
+			            Name:  roleName, 
+			            Color: &color,
+		            })
+
+        	        if err != nil {
+				       Respond(s, i, err.Error())
+				       log.Println("Error creating custom color:", err)
+				       return
+			        }
+        	              	          
+        	    case "text-category": 
+
+        	        ParentIDChannelText = options[j].ChannelValue(s).ID       	
+
+        	    case "voice-category":
+
+        	        ParentIDVoiceText = options[j].ChannelValue(s).ID
+
+        	    default:
+        	    	fmt.Println("role dropped")
+        	    	user := options[j].UserValue(s)
+        	    	err = s.GuildMemberRoleAdd(i.GuildID, user.ID, role.ID)
+        	    	if err != nil {
+        	    		log.Println("Error adding role to member: ", err)
+        	    		return
+        	    	}
+
+        	}
+
+        }
+
+
+        Respond(s, i, "Created!") // respond for cases
+
 		/*
 			for _, userID := range len(options) {
 				err := s.GuildMemberRoleAdd(i.GuildID, userID, role.ID)
@@ -357,6 +524,7 @@ func handleCreateTeam(s *discordgo.Session, i *discordgo.InteractionCreate) {
 					return
 				}
 		*/
+
 		permOverwrites := []*discordgo.PermissionOverwrite{
 			{
 				ID:    role.ID,
@@ -375,7 +543,7 @@ func handleCreateTeam(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		channelText, err := s.GuildChannelCreateComplex(i.GuildID, discordgo.GuildChannelCreateData{
 			Name:                 roleName,
 			Type:                 discordgo.ChannelTypeGuildText,
-			ParentID:             "563361695699959811", // Tours category
+			ParentID:             ParentIDChannelText, // Tours category
 			PermissionOverwrites: permOverwrites,
 		})
 		if err != nil {
@@ -385,7 +553,7 @@ func handleCreateTeam(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		channelVoice, err := s.GuildChannelCreateComplex(i.GuildID, discordgo.GuildChannelCreateData{
 			Name:                 roleName,
 			Type:                 discordgo.ChannelTypeGuildVoice,
-			ParentID:             "571337094165954610", // Team channels category
+			ParentID:             ParentIDVoiceText, // Team channels category
 			PermissionOverwrites: permOverwrites,
 		})
 		if err != nil {
@@ -441,7 +609,7 @@ func handleRating(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	// fmt.Println(member.User.ID)
 	options := i.ApplicationCommandData().Options
 	userId := options[0].StringValue()
-	// userId := 6560308
+	fmt.Println(userId) // userId := 6560308
 	url := fmt.Sprintf("http://localhost:8089/api/users/%s", userId)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
