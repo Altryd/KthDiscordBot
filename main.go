@@ -60,6 +60,73 @@ func main() {
 		os.Exit(1)
 	}
 
+	commandDeleteChannel := &discordgo.ApplicationCommand{
+		Name:        "delete-channel",
+		Description: "Delete text and voice channels",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Name:        "first-channel",
+				Description: "Pick the channel that you want to delete",
+				Type:        discordgo.ApplicationCommandOptionChannel,
+				Required:    false,
+			},
+			{
+				Name:        "second-channel",
+				Description: "Pick the channel that you want to delete",
+				Type:        discordgo.ApplicationCommandOptionChannel,
+				Required:    false,
+			},
+			{
+				Name:        "third-channel",
+				Description: "Pick the channel that you want to delete",
+				Type:        discordgo.ApplicationCommandOptionChannel,
+				Required:    false,
+			},
+			{
+				Name:        "fourth-channel",
+				Description: "Pick the channel that you want to delete",
+				Type:        discordgo.ApplicationCommandOptionChannel,
+				Required:    false,
+			},
+			{
+				Name:        "fifth-channel",
+				Description: "Pick the channel that you want to delete",
+				Type:        discordgo.ApplicationCommandOptionChannel,
+				Required:    false,
+			},
+			{
+				Name:        "sixth-channel",
+				Description: "Pick the channel that you want to delete",
+				Type:        discordgo.ApplicationCommandOptionChannel,
+				Required:    false,
+			},
+			{
+				Name:        "seventh-channel",
+				Description: "Pick the channel that you want to delete",
+				Type:        discordgo.ApplicationCommandOptionChannel,
+				Required:    false,
+			},
+			{
+				Name:        "eight-channel",
+				Description: "Pick the channel that you want to delete",
+				Type:        discordgo.ApplicationCommandOptionChannel,
+				Required:    false,
+			},
+			{
+				Name:        "ninth-channel",
+				Description: "Pick the channel that you want to delete",
+				Type:        discordgo.ApplicationCommandOptionChannel,
+				Required:    false,
+			},
+			{
+				Name:        "tenth-channel",
+				Description: "Pick the channel that you want to delete",
+				Type:        discordgo.ApplicationCommandOptionChannel,
+				Required:    false,
+			},
+		},
+	}
+
 	commandArchive := &discordgo.ApplicationCommand{
 		Name:        "archive",
 		Description: "Archive the chat for its participants",
@@ -178,6 +245,10 @@ func main() {
 	if err != nil {
 		fmt.Printf("Error adding command: %s\n", err.Error())
 	}
+	cmdCommandDeleteChannel, err := discord.ApplicationCommandCreate(discord.State.User.ID, config.GuildID, commandDeleteChannel)
+	if err != nil {
+		fmt.Printf("Error adding command: %s\n", err.Error())
+	}
 
 	// Block until we get ctrl-c
 	fmt.Println("Bot running. Press CTRL-C to exit.")
@@ -200,6 +271,10 @@ func main() {
 	if err != nil {
 		fmt.Printf("Error removing command: %s\n", err.Error())
 	}
+	err = discord.ApplicationCommandDelete(discord.State.User.ID, config.GuildID, cmdCommandDeleteChannel.ID)
+	if err != nil {
+		fmt.Printf("Error removing command: %s\n", err.Error())
+	}
 	discord.Close()
 }
 
@@ -217,6 +292,8 @@ func (dh *discordHandler) command(s *discordgo.Session, i *discordgo.Interaction
 			handleCreateTeam(s, i)
 		case "rating":
 			handleRating(s, i)
+		case "delete-channel":
+			handleDeletingChannels(s, i)
 		default:
 			Respond(s, i, "WHO ARE YOU? DIDN'T READ, LOL")
 		}
@@ -856,3 +933,37 @@ func getRandomColor() int {
 	color := (r << 16) | (g << 8) | b
 	return color
 }
+
+func handleDeletingChannels(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	RespondForThinking(s, i)
+	member, err := s.GuildMember(i.GuildID, i.Member.User.ID)
+	if err != nil {
+		fmt.Println("error retrieving member,", err)
+		return
+	}
+
+	if hasRole(member.Roles, "Секретарь ЦК импрува", s, i.GuildID) {
+
+		options := i.ApplicationCommandData().Options
+        var channelIDs []string
+
+        // extracting
+        for _, option := range options {
+            if option.Type == discordgo.ApplicationCommandOptionChannel {
+                channelIDs = append(channelIDs, option.ChannelValue(s).ID) // getting the id
+            }
+        }
+
+        // deleting
+        for _, channelID := range channelIDs {
+            if _, err := s.ChannelDelete(channelID); err != nil {
+                fmt.Println("Error deleting channel:", channelID, "Error:", err)
+                continue // even if there is an error it will continue
+            }
+        }
+
+        Respond(s, i, "Channels deleted successfully!")
+    } else {
+    	Respond(s, i, "You don't have access to do that!")
+    }
+} 
