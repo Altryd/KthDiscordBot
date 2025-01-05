@@ -556,30 +556,29 @@ func handleCreateTeam(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
         	switch options[j].Name {
 
-        	    case "custom-color":
-        	    	cs := options[j].StringValue()
-			    if CheckHexColor(cs) {
-                    cs_output := cs[1:] // remove #
-                    value, _ := strconv.ParseInt(cs_output, 16, 32) 
-         
-                    color := int(value)
-                    fmt.Printf("Selected role: %s\n", roleName)
-         
-                    _, err := s.GuildRoleCreate(i.GuildID, &discordgo.RoleParams{
-                        Name:  roleName,
-                        Color: &color,
-                    })
-                     
-                    if err != nil {
-                        Respond(s, i, "Failed to create role.")
-                        log.Println("Error creating role:", err)
-                        return
-                    }
-                } else {
-                    Respond(s, i, "Invalid HEX color format. Example - #58a2a3 (6 hexadecimal digits).")
-                    return
-                }
+			case "custom-color":
+				cs := options[j].StringValue()
+				if CheckHexColor(cs) {
+					cs_output := cs[1:] // remove #
+					value, _ := strconv.ParseInt(cs_output, 16, 32)
+
+					color := int(value)
+					fmt.Printf("Selected role: %s\n", roleName)
+
 					role, err = s.GuildRoleCreate(i.GuildID, &discordgo.RoleParams{
+						Name:  roleName,
+						Color: &color,
+					})
+
+					if err != nil {
+						Respond(s, i, "Failed to create role.")
+						log.Println("Error creating role:", err)
+						return
+					}
+				} else {
+					Respond(s, i, "Invalid HEX color format. Example - #58a2a3 (6 hexadecimal digits).")
+					return
+				}
 
                 // checkhexcolor() exists
                 // if err != nil {
