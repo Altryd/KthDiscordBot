@@ -536,14 +536,23 @@ func handleCreateTeam(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
     
 		fmt.Printf("Selected role: %s\n", roleName)
+		role := &discordgo.Role{}
+		isThereCustomColor := false
+		for j := 1; j < len(options); j++ {
+			if options[j].Name == "custom-color" {
+				isThereCustomColor = true
+				break
+			}
+		}
+		if !isThereCustomColor {
+			role, err = s.GuildRoleCreate(i.GuildID, &discordgo.RoleParams{
+				Name:  roleName, // Name of the new role
+				Color: &color,
+			})
+		}
 
-		role, err := s.GuildRoleCreate(i.GuildID, &discordgo.RoleParams{
-			Name:  roleName, // Name of the new role
-			Color: &color,
-		})
-
-        // main cases
-        for j := 1; j < len(options); j++ {
+		// main cases
+		for j := len(options) - 1; j > 0; j-- {
 
         	switch options[j].Name {
 
@@ -570,6 +579,7 @@ func handleCreateTeam(s *discordgo.Session, i *discordgo.InteractionCreate) {
                     Respond(s, i, "Invalid HEX color format. Example - #58a2a3 (6 hexadecimal digits).")
                     return
                 }
+					role, err = s.GuildRoleCreate(i.GuildID, &discordgo.RoleParams{
 
                 // checkhexcolor() exists
                 // if err != nil {
