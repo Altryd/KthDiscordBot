@@ -4,17 +4,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"net/http"
 	"os"
 	"os/signal"
+	"regexp"
 	"strconv"
 	"strings"
 	"syscall"
 	"time"
-	"io/ioutil"
-	"regexp"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -29,9 +29,9 @@ type discordHandler struct {
 }
 
 type discordServerIDs struct {
-	ParentIDDiscordServer  string `json:"id_discord_server"`
-    ParentIDChannelText    string `json:"id_text_channel"`
-    ParentIDVoiceText      string `json:"id_voice_channel"`
+	ParentIDDiscordServer string `json:"id_discord_server"`
+	ParentIDChannelText   string `json:"id_text_channel"`
+	ParentIDVoiceText     string `json:"id_voice_channel"`
 }
 
 func main() {
@@ -279,7 +279,6 @@ func main() {
 	discord.Close()
 }
 
-
 func (dh *discordHandler) ready(s *discordgo.Session, m *discordgo.Ready) {
 	s.UpdateListeningStatus("Listening")
 }
@@ -409,9 +408,9 @@ func Respond(s *discordgo.Session, i *discordgo.InteractionCreate, content strin
 }
 
 func CheckHexColor(s string) bool {
-    // Regular expression to match HEX color codes
-    re := regexp.MustCompile(`^#[0-9A-Fa-f]{6}$`) // ^ - start of string, # - start of hex, 0-9 - min and max num, A-F - min max sym,                                                  
-    return re.MatchString(s)                      // a-f min max sym but smoll, 6 - six symbols (# doesn't count), $ - end of string
+	// Regular expression to match HEX color codes
+	re := regexp.MustCompile(`^#[0-9A-Fa-f]{6}$`) // ^ - start of string, # - start of hex, 0-9 - min and max num, A-F - min max sym,
+	return re.MatchString(s)                      // a-f min max sym but smoll, 6 - six symbols (# doesn't count), $ - end of string
 }
 
 func handleCreateTeam(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -424,183 +423,218 @@ func handleCreateTeam(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 	if hasRole(member.Roles, "Секретарь ЦК импрува", s, i.GuildID) {
 		//var userIDs []string
-	    //user := options[1].UserValue(s)
+		//user := options[1].UserValue(s)
 
-	    //locals
+		//locals
 		options := i.ApplicationCommandData().Options
 		roleName := options[0].StringValue()
 		color := getRandomColor()
-	    ParentIDDiscordServer := "0"
-	    ParentIDChannelText := "0"
-        ParentIDVoiceText := "0"
+		ParentIDDiscordServer := "0"
+		ParentIDChannelText := "0"
+		ParentIDVoiceText := "0"
 
-        // json
-	    fileBytes, err := ioutil.ReadFile("./discord_settings.json")
-	    if err != nil {
-	    	panic(err)
-	    }
-  
-	    var ids discordServerIDs
-    
-	    err = json.Unmarshal(fileBytes, &ids)
-	    if err != nil {
-	    	panic(err)
-	    }
-    
-	    // fmt.Println("ID of Discord Server:", ids.ParentIDDiscordServer)
-	    // fmt.Println("ID of Text Channel:", ids.ParentIDChannelText)
-	    // fmt.Println("ID of Voice Channel:", ids.ParentIDVoiceText)
-    
-        // fmt.Println("[orig] ParentIDChannelText - ", ParentIDChannelText)
-        // fmt.Println("[orig] ParentIDVoiceText - ", ParentIDVoiceText)
-    
-        if ParentIDDiscordServer == ids.ParentIDDiscordServer {
-        	fmt.Println("yup, all good")
-        	ParentIDChannelText = ids.ParentIDChannelText
-            ParentIDVoiceText = ids.ParentIDVoiceText
-            fmt.Println("[yup] ParentIDChannelText - ", ParentIDChannelText)
-            fmt.Println("[yup] ParentIDVoiceText - ", ParentIDVoiceText)
-        } else {
-        	fmt.Println("[bad] ID of Discord Server is different from ID from discord_settings.json file. Text category and voice category are going to be at the firsts categories")
+		// json
+		fileBytes, err := ioutil.ReadFile("./discord_settings.json")
+		if err != nil {
+			panic(err)
+		}
 
+		var ids discordServerIDs
 
-        	channels, err := s.GuildChannels(i.GuildID)
-            if err != nil {
-                fmt.Println("error retrieving channels,", err)
-                return
-            }
+		err = json.Unmarshal(fileBytes, &ids)
+		if err != nil {
+			panic(err)
+		}
 
-            textchannels, err := s.GuildChannels(i.GuildID)
-            if err != nil {
-                fmt.Println("error retrieving channels,", err)
-                return
-            }
-        
-            // holding first category
-            var firstCategory *discordgo.Channel
-            var firstVoiceCategory *discordgo.Channel
-        
-            // voice category
-            for _, channel := range channels {
-            if channel.Type == discordgo.ChannelTypeGuildCategory {
-            // check if it has any voice channels
-            for _, child := range channels {
-                if child.ParentID == channel.ID && child.Type == discordgo.ChannelTypeGuildVoice {
-                    firstVoiceCategory = channel
-                    break
-                }
-            }
-            if firstVoiceCategory != nil {
-                break // stop after first category
-                    }
-                }
-            }
-            // check
-            if firstVoiceCategory != nil {
-                fmt.Println("First Category Found:")
-                fmt.Println("VoiceID:", firstVoiceCategory.ID)
-            } else {
-                fmt.Println("No categories found for voice")
-            }
+		// fmt.Println("ID of Discord Server:", ids.ParentIDDiscordServer)
+		// fmt.Println("ID of Text Channel:", ids.ParentIDChannelText)
+		// fmt.Println("ID of Voice Channel:", ids.ParentIDVoiceText)
 
+		// fmt.Println("[orig] ParentIDChannelText - ", ParentIDChannelText)
+		// fmt.Println("[orig] ParentIDVoiceText - ", ParentIDVoiceText)
 
+		if ParentIDDiscordServer == ids.ParentIDDiscordServer {
+			fmt.Println("yup, all good")
+			ParentIDChannelText = ids.ParentIDChannelText
+			ParentIDVoiceText = ids.ParentIDVoiceText
+			fmt.Println("[yup] ParentIDChannelText - ", ParentIDChannelText)
+			fmt.Println("[yup] ParentIDVoiceText - ", ParentIDVoiceText)
+		} else {
+			fmt.Println("[bad] ID of Discord Server is different from ID from discord_settings.json file. Text category and voice category are going to be at the firsts categories")
 
-            // text category
-            for _, textchannel := range textchannels {
-                if textchannel.Type == discordgo.ChannelTypeGuildCategory {
-                    // check if it has any text channels
-                    for _, child := range channels {
-                        if child.ParentID == textchannel.ID && child.Type == discordgo.ChannelTypeGuildText {
-                            firstCategory = textchannel
-                            break
-                        }
-                    }
-                    if firstCategory != nil {
-                        break // stop after finding first category
-                    }
-                }
-            }
-        
-            // check
-            if firstCategory != nil {
-                fmt.Println("First Category Found:")
-                fmt.Println("TextID:", firstCategory.ID)
-            } else {
-                fmt.Println("No categories found for text")
-            }
+			channels, err := s.GuildChannels(i.GuildID)
+			if err != nil {
+				fmt.Println("error retrieving channels,", err)
+				return
+			}
 
-            ParentIDChannelText = firstCategory.ID
-            ParentIDVoiceText = firstVoiceCategory.ID
+			textchannels, err := s.GuildChannels(i.GuildID)
+			if err != nil {
+				fmt.Println("error retrieving channels,", err)
+				return
+			}
 
-        }
+			// holding first category
+			var firstCategory *discordgo.Channel
+			var firstVoiceCategory *discordgo.Channel
 
-    
+			// voice category
+			for _, channel := range channels {
+				if channel.Type == discordgo.ChannelTypeGuildCategory {
+					// check if it has any voice channels
+					for _, child := range channels {
+						if child.ParentID == channel.ID && child.Type == discordgo.ChannelTypeGuildVoice {
+							firstVoiceCategory = channel
+							break
+						}
+					}
+					if firstVoiceCategory != nil {
+						break // stop after first category
+					}
+				}
+			}
+			// check
+			if firstVoiceCategory != nil {
+				fmt.Println("First Category Found:")
+				fmt.Println("VoiceID:", firstVoiceCategory.ID)
+			} else {
+				fmt.Println("No categories found for voice")
+			}
+
+			// text category
+			for _, textchannel := range textchannels {
+				if textchannel.Type == discordgo.ChannelTypeGuildCategory {
+					// check if it has any text channels
+					for _, child := range channels {
+						if child.ParentID == textchannel.ID && child.Type == discordgo.ChannelTypeGuildText {
+							firstCategory = textchannel
+							break
+						}
+					}
+					if firstCategory != nil {
+						break // stop after finding first category
+					}
+				}
+			}
+
+			// check
+			if firstCategory != nil {
+				fmt.Println("First Category Found:")
+				fmt.Println("TextID:", firstCategory.ID)
+			} else {
+				fmt.Println("No categories found for text")
+			}
+
+			ParentIDChannelText = firstCategory.ID
+			ParentIDVoiceText = firstVoiceCategory.ID
+
+		}
+
 		fmt.Printf("Selected role: %s\n", roleName)
+		role := &discordgo.Role{}
+		isThereCustomColor := false
+		for j := 1; j < len(options); j++ {
+			if options[j].Name == "custom-color" {
+				isThereCustomColor = true
+				break
+			}
+		}
+		if !isThereCustomColor {
+			role, err = s.GuildRoleCreate(i.GuildID, &discordgo.RoleParams{
+				Name:  roleName, // Name of the new role
+				Color: &color,
+			})
+		}
 
+<<<<<<< Updated upstream
+		// main cases
+		for j := len(options) - 1; j > 0; j-- {
+=======
 		role, err := s.GuildRoleCreate(i.GuildID, &discordgo.RoleParams{
 			Name:  roleName, // Name of the new role
 			Color: &color,
 		})
 
-        // main cases
-        for j := 1; j < len(options); j++ {
+		// main cases
+		for j := 1; j < len(options); j++ {
+>>>>>>> Stashed changes
 
-        	switch options[j].Name {
+			switch options[j].Name {
 
-        	    case "custom-color":
-        	    	cs := options[j].StringValue()
-			    if CheckHexColor(cs) {
-                    cs_output := cs[1:] // remove #
-                    value, _ := strconv.ParseInt(cs_output, 16, 32) 
-         
-                    color := int(value)
-                    fmt.Printf("Selected role: %s\n", roleName)
-         
-                    _, err := s.GuildRoleCreate(i.GuildID, &discordgo.RoleParams{
-                        Name:  roleName,
-                        Color: &color,
-                    })
-                     
-                    if err != nil {
-                        Respond(s, i, "Failed to create role.")
-                        log.Println("Error creating role:", err)
-                        return
-                    }
-                } else {
-                    Respond(s, i, "Invalid HEX color format. Example - #58a2a3 (6 hexadecimal digits).")
-                    return
-                }
+			case "custom-color":
+				cs := options[j].StringValue()
+				if CheckHexColor(cs) {
+					cs_output := cs[1:] // remove #
+					value, _ := strconv.ParseInt(cs_output, 16, 32)
+<<<<<<< Updated upstream
 
-                // checkhexcolor() exists
-                // if err != nil {
-                //     Respond(s, i, "Value is out of range: use HEX color type (for example: #58a2a3 - 7 symbols max)")
-                //     log.Println("Error creating custom color:", err)
-                //     return
-                // }
-        	              	          
-        	    case "text-category": 
+					color := int(value)
+					fmt.Printf("Selected role: %s\n", roleName)
 
-        	        ParentIDChannelText = options[j].ChannelValue(s).ID       	
+					role, err = s.GuildRoleCreate(i.GuildID, &discordgo.RoleParams{
+						Name:  roleName,
+						Color: &color,
+					})
 
-        	    case "voice-category":
+					if err != nil {
+						Respond(s, i, "Failed to create role.")
+						log.Println("Error creating role:", err)
+						return
+					}
+				} else {
+					Respond(s, i, "Invalid HEX color format. Example - #58a2a3 (6 hexadecimal digits).")
+					return
+				}
+=======
+>>>>>>> Stashed changes
 
-        	        ParentIDVoiceText = options[j].ChannelValue(s).ID
+					color := int(value)
+					fmt.Printf("Selected role: %s\n", roleName)
 
-        	    default:
-        	    	fmt.Println("role dropped")
-        	    	user := options[j].UserValue(s)
-        	    	err = s.GuildMemberRoleAdd(i.GuildID, user.ID, role.ID)
-        	    	if err != nil {
-        	    		log.Println("Error adding role to member: ", err)
-        	    		return
-        	    	}
+					_, err := s.GuildRoleCreate(i.GuildID, &discordgo.RoleParams{
+						Name:  roleName,
+						Color: &color,
+					})
 
-        	}
+					if err != nil {
+						Respond(s, i, "Failed to create role.")
+						log.Println("Error creating role:", err)
+						return
+					}
+				} else {
+					Respond(s, i, "Invalid HEX color format. Example - #58a2a3 (6 hexadecimal digits).")
+					return
+				}
 
-        }
+				// checkhexcolor() exists
+				// if err != nil {
+				//     Respond(s, i, "Value is out of range: use HEX color type (for example: #58a2a3 - 7 symbols max)")
+				//     log.Println("Error creating custom color:", err)
+				//     return
+				// }
 
+			case "text-category":
 
-        Respond(s, i, "Created!") // respond for cases
+				ParentIDChannelText = options[j].ChannelValue(s).ID
+
+			case "voice-category":
+
+				ParentIDVoiceText = options[j].ChannelValue(s).ID
+
+			default:
+				fmt.Println("role dropped")
+				user := options[j].UserValue(s)
+				err = s.GuildMemberRoleAdd(i.GuildID, user.ID, role.ID)
+				if err != nil {
+					log.Println("Error adding role to member: ", err)
+					return
+				}
+
+			}
+
+		}
+
+		Respond(s, i, "Created!") // respond for cases
 
 		/*
 			for _, userID := range len(options) {
@@ -695,18 +729,17 @@ func handleArchive(s *discordgo.Session, i *discordgo.InteractionCreate) {
 }
 
 func GetUserAvatarByID(s *discordgo.Session, userID string) (string, error) {
-    // fetching user
-    user, err := s.User(userID)
-    if err != nil {
-        return "", fmt.Errorf("error fetching user: %w", err)
-    }
+	// fetching user
+	user, err := s.User(userID)
+	if err != nil {
+		return "", fmt.Errorf("error fetching user: %w", err)
+	}
 
-    // building with the hash of the avatar
-    avatarURL := user.AvatarURL("1024") // size 5x5 etc
+	// building with the hash of the avatar
+	avatarURL := user.AvatarURL("1024") // size 5x5 etc
 
-    return avatarURL, nil
+	return avatarURL, nil
 }
-
 
 func handleRating(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	RespondForThinkingVisible(s, i)
@@ -718,10 +751,10 @@ func handleRating(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	// fmt.Println(member.User.ID)
 	options := i.ApplicationCommandData().Options
-    if len(options) == 0 {
-       Respond(s, i, "delaem")
-       return
-    }
+	if len(options) == 0 {
+		Respond(s, i, "delaem")
+		return
+	}
 	userId := options[0].StringValue()
 	fmt.Println(userId) // userId := 6560308
 	url := fmt.Sprintf("http://localhost:8089/api/users/%s", userId)
@@ -759,36 +792,36 @@ func handleRating(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	discord_id := userData["discord_id"].(string)
 	//imageURL := "https://i.ibb.co/9sdBWTS/kth.png"
 
-    avatarURL, err := GetUserAvatarByID(s, discord_id)
-        if err != nil {
-            fmt.Println("Error getting avatar:", err)
-            return
-        }
+	avatarURL, err := GetUserAvatarByID(s, discord_id)
+	if err != nil {
+		fmt.Println("Error getting avatar:", err)
+		return
+	}
 
-    embed := &discordgo.MessageEmbed{
-	    Title:    "KTH Рейтинг",
-	    Color:    0x00FF00,
-	    Thumbnail: &discordgo.MessageEmbedThumbnail {
-	        URL: avatarURL,
-	    },
+	embed := &discordgo.MessageEmbed{
+		Title: "KTH Рейтинг",
+		Color: 0x00FF00,
+		Thumbnail: &discordgo.MessageEmbedThumbnail{
+			URL: avatarURL,
+		},
 
-	    Fields: []*discordgo.MessageEmbedField {
-	     	    {
-                    Name:   "Details", 
-                    Value:  fmt.Sprintf("**Username:** %s\n**Rating:** %s\n**Discord ID: **%s", username, ratingStr, discord_id),
-                    Inline: true,
-                },
-	        },
-	    }
-     
-	    editResponse := &discordgo.WebhookEdit{
-	    	Content: nil,                               
-	    	Embeds:  &[]*discordgo.MessageEmbed{embed}, // fking slice
-	    }
-    
-	    // edit the message of the previous interaction (RespondForThinkingVisible)
-	    if _, err := s.InteractionResponseEdit(i.Interaction, editResponse); err != nil {
-	    	 fmt.Println("error editing response,", err)
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "Details",
+				Value:  fmt.Sprintf("**Username:** %s\n**Rating:** %s\n**Discord ID: **%s", username, ratingStr, discord_id),
+				Inline: true,
+			},
+		},
+	}
+
+	editResponse := &discordgo.WebhookEdit{
+		Content: nil,
+		Embeds:  &[]*discordgo.MessageEmbed{embed}, // fking slice
+	}
+
+	// edit the message of the previous interaction (RespondForThinkingVisible)
+	if _, err := s.InteractionResponseEdit(i.Interaction, editResponse); err != nil {
+		fmt.Println("error editing response,", err)
 	}
 	// Respond(s, i, fmt.Sprintf("Команда еще тестируется, ваш дискорд id: %s \nKTH рейтинг игрока: %s: %f "+
 	// 	"\nKTH рейтинг базируется на Skill Issue Points",
@@ -1017,25 +1050,25 @@ func handleDeletingChannels(s *discordgo.Session, i *discordgo.InteractionCreate
 	if hasRole(member.Roles, "Секретарь ЦК импрува", s, i.GuildID) {
 
 		options := i.ApplicationCommandData().Options
-        var channelIDs []string
+		var channelIDs []string
 
-        // extracting
-        for _, option := range options {
-            if option.Type == discordgo.ApplicationCommandOptionChannel {
-                channelIDs = append(channelIDs, option.ChannelValue(s).ID) // getting the id
-            }
-        }
+		// extracting
+		for _, option := range options {
+			if option.Type == discordgo.ApplicationCommandOptionChannel {
+				channelIDs = append(channelIDs, option.ChannelValue(s).ID) // getting the id
+			}
+		}
 
-        // deleting
-        for _, channelID := range channelIDs {
-            if _, err := s.ChannelDelete(channelID); err != nil {
-                fmt.Println("Error deleting channel:", channelID, "Error:", err)
-                continue // even if there is an error it will continue
-            }
-        }
+		// deleting
+		for _, channelID := range channelIDs {
+			if _, err := s.ChannelDelete(channelID); err != nil {
+				fmt.Println("Error deleting channel:", channelID, "Error:", err)
+				continue // even if there is an error it will continue
+			}
+		}
 
-        Respond(s, i, "Channels deleted successfully!")
-    } else {
-    	Respond(s, i, "You don't have access to do that!")
-    }
-} 
+		Respond(s, i, "Channels deleted successfully!")
+	} else {
+		Respond(s, i, "You don't have access to do that!")
+	}
+}
