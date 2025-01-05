@@ -546,18 +546,8 @@ func handleCreateTeam(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			})
 		}
 
-<<<<<<< Updated upstream
 		// main cases
 		for j := len(options) - 1; j > 0; j-- {
-=======
-		role, err := s.GuildRoleCreate(i.GuildID, &discordgo.RoleParams{
-			Name:  roleName, // Name of the new role
-			Color: &color,
-		})
-
-		// main cases
-		for j := 1; j < len(options); j++ {
->>>>>>> Stashed changes
 
 			switch options[j].Name {
 
@@ -566,32 +556,11 @@ func handleCreateTeam(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				if CheckHexColor(cs) {
 					cs_output := cs[1:] // remove #
 					value, _ := strconv.ParseInt(cs_output, 16, 32)
-<<<<<<< Updated upstream
 
 					color := int(value)
 					fmt.Printf("Selected role: %s\n", roleName)
 
 					role, err = s.GuildRoleCreate(i.GuildID, &discordgo.RoleParams{
-						Name:  roleName,
-						Color: &color,
-					})
-
-					if err != nil {
-						Respond(s, i, "Failed to create role.")
-						log.Println("Error creating role:", err)
-						return
-					}
-				} else {
-					Respond(s, i, "Invalid HEX color format. Example - #58a2a3 (6 hexadecimal digits).")
-					return
-				}
-=======
->>>>>>> Stashed changes
-
-					color := int(value)
-					fmt.Printf("Selected role: %s\n", roleName)
-
-					_, err := s.GuildRoleCreate(i.GuildID, &discordgo.RoleParams{
 						Name:  roleName,
 						Color: &color,
 					})
@@ -633,7 +602,6 @@ func handleCreateTeam(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			}
 
 		}
-
 		Respond(s, i, "Created!") // respond for cases
 
 		/*
