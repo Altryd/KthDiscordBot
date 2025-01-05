@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 	"io/ioutil"
+	"regexp"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -201,7 +202,7 @@ func main() {
 			{
 				Type:        discordgo.ApplicationCommandOptionString,
 				Name:        "custom-color",
-				Description: "pick your custom color",
+				Description: "pick your custom color (HEX type of color!!!!)",
 				Required:    false,
 			},
 			{
@@ -227,7 +228,7 @@ func main() {
 				Name:        "player",
 				Description: "The osu id or username of the player",
 				Type:        discordgo.ApplicationCommandOptionString,
-				Required:    true,
+				Required:    false,
 			},
 		},
 	}
@@ -407,6 +408,12 @@ func Respond(s *discordgo.Session, i *discordgo.InteractionCreate, content strin
 	}
 }
 
+func CheckHexColor(s string) bool {
+    // Regular expression to match HEX color codes
+    re := regexp.MustCompile(`^#[0-9A-Fa-f]{6}$`) // ^ - start of string, # - start of hex, 0-9 - min and max num, A-F - min max sym,                                                  
+    return re.MatchString(s)                      // a-f min max sym but smoll, 6 - six symbols (# doesn't count), $ - end of string
+}
+
 func handleCreateTeam(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	RespondForThinking(s, i)
 	member, err := s.GuildMember(i.GuildID, i.Member.User.ID)
@@ -542,23 +549,34 @@ func handleCreateTeam(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
         	    case "custom-color":
         	    	cs := options[j].StringValue()
-			        cs_output := cs[1:]
-			        value, err := strconv.ParseInt(cs_output, 16, 32)
+			    if CheckHexColor(cs) {
+                    cs_output := cs[1:] // remove #
+                    value, _ := strconv.ParseInt(cs_output, 16, 32) 
+         
+                    color := int(value)
+                    fmt.Printf("Selected role: %s\n", roleName)
+         
+                    _, err := s.GuildRoleCreate(i.GuildID, &discordgo.RoleParams{
+                        Name:  roleName,
+                        Color: &color,
+                    })
+                     
+                    if err != nil {
+                        Respond(s, i, "Failed to create role.")
+                        log.Println("Error creating role:", err)
+                        return
+                    }
+                } else {
+                    Respond(s, i, "Invalid HEX color format. Example - #58a2a3 (6 hexadecimal digits).")
+                    return
+                }
 
-			        color = int(value)
-
-			        fmt.Printf("Selected role: %s\n", roleName)
-
-		            s.GuildRoleCreate(i.GuildID, &discordgo.RoleParams{
-			            Name:  roleName, 
-			            Color: &color,
-		            })
-
-        	        if err != nil {
-				       Respond(s, i, err.Error())
-				       log.Println("Error creating custom color:", err)
-				       return
-			        }
+                // checkhexcolor() exists
+                // if err != nil {
+                //     Respond(s, i, "Value is out of range: use HEX color type (for example: #58a2a3 - 7 symbols max)")
+                //     log.Println("Error creating custom color:", err)
+                //     return
+                // }
         	              	          
         	    case "text-category": 
 
@@ -676,15 +694,34 @@ func handleArchive(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 }
 
+func GetUserAvatarByID(s *discordgo.Session, userID string) (string, error) {
+    // fetching user
+    user, err := s.User(userID)
+    if err != nil {
+        return "", fmt.Errorf("error fetching user: %w", err)
+    }
+
+    // building with the hash of the avatar
+    avatarURL := user.AvatarURL("1024") // size 5x5 etc
+
+    return avatarURL, nil
+}
+
+
 func handleRating(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	RespondForThinkingVisible(s, i)
-	member, err := s.GuildMember(i.GuildID, i.Member.User.ID)
+	// member = _
+	_, err := s.GuildMember(i.GuildID, i.Member.User.ID)
 	if err != nil {
 		fmt.Println("error retrieving member,", err)
 		return
 	}
 	// fmt.Println(member.User.ID)
 	options := i.ApplicationCommandData().Options
+    if len(options) == 0 {
+       Respond(s, i, "delaem")
+       return
+    }
 	userId := options[0].StringValue()
 	fmt.Println(userId) // userId := 6560308
 	url := fmt.Sprintf("http://localhost:8089/api/users/%s", userId)
@@ -711,6 +748,7 @@ func handleRating(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	err = json.Unmarshal(body, &data)
 	userData, _ := data["user"].(map[string]interface{})
 	userRating, ok := userData["rating"].(float64)
+	ratingStr := fmt.Sprintf("%.2f", userRating)
 	if ok != true {
 		fmt.Println("error happened", err)
 		Respond(s, i, "о нет! произошла ошибка! :(")
@@ -718,9 +756,43 @@ func handleRating(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	}
 	username := userData["username"].(string)
 	// data["user"]
-	Respond(s, i, fmt.Sprintf("Команда еще тестируется, ваш дискорд id: %s \nKTH рейтинг игрока: %s: %f "+
-		"\nKTH рейтинг базируется на Skill Issue Points",
-		member.User.ID, username, userRating))
+	discord_id := userData["discord_id"].(string)
+	//imageURL := "https://i.ibb.co/9sdBWTS/kth.png"
+
+    avatarURL, err := GetUserAvatarByID(s, discord_id)
+        if err != nil {
+            fmt.Println("Error getting avatar:", err)
+            return
+        }
+
+    embed := &discordgo.MessageEmbed{
+	    Title:    "KTH Рейтинг",
+	    Color:    0x00FF00,
+	    Thumbnail: &discordgo.MessageEmbedThumbnail {
+	        URL: avatarURL,
+	    },
+
+	    Fields: []*discordgo.MessageEmbedField {
+	     	    {
+                    Name:   "Details", 
+                    Value:  fmt.Sprintf("**Username:** %s\n**Rating:** %s\n**Discord ID: **%s", username, ratingStr, discord_id),
+                    Inline: true,
+                },
+	        },
+	    }
+     
+	    editResponse := &discordgo.WebhookEdit{
+	    	Content: nil,                               
+	    	Embeds:  &[]*discordgo.MessageEmbed{embed}, // fking slice
+	    }
+    
+	    // edit the message of the previous interaction (RespondForThinkingVisible)
+	    if _, err := s.InteractionResponseEdit(i.Interaction, editResponse); err != nil {
+	    	 fmt.Println("error editing response,", err)
+	}
+	// Respond(s, i, fmt.Sprintf("Команда еще тестируется, ваш дискорд id: %s \nKTH рейтинг игрока: %s: %f "+
+	// 	"\nKTH рейтинг базируется на Skill Issue Points",
+	//member.User.ID, username, userRating)
 }
 
 func archiveRoleMembers(s *discordgo.Session, guildID string, roleName string, i *discordgo.InteractionCreate) error {
