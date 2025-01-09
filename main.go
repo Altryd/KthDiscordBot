@@ -29,9 +29,13 @@ type discordHandler struct {
 }
 
 type discordServerIDs struct {
-	ParentIDDiscordServer string `json:"id_discord_server"`
-	ParentIDChannelText   string `json:"id_text_channel"`
-	ParentIDVoiceText     string `json:"id_voice_channel"`
+	ParentIDDiscordServer  string `json:"id_discord_server"`
+	ParentIDChannelText    string `json:"id_text_channel"`
+	ParentIDVoiceText      string `json:"id_voice_channel"`
+	ParentIDBOT_bath       string `json:"id_bot_bathbot"`
+	ParentIDBOT_owo        string `json:"id_bot_owobot"`
+	ParentIDBOT_skillissue string `json:"id_bot_skillissue"`
+	ParentIDBOT_elitebotix string `json:"id_bot_elitebotix"`
 }
 
 func main() {
@@ -123,6 +127,159 @@ func main() {
 				Name:        "tenth-channel",
 				Description: "Pick the channel that you want to delete",
 				Type:        discordgo.ApplicationCommandOptionChannel,
+				Required:    false,
+			},
+		},
+	}
+
+	commandDeleteRole := &discordgo.ApplicationCommand{
+		Name:        "delete-role",
+		Description: "Delete a specific role",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Name:        "first-role",
+				Description: "Pick the role that you want to delete",
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Required:    false,
+			},
+			{
+				Name:        "second-role",
+				Description: "Pick the role that you want to delete",
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Required:    false,
+			},
+			{
+				Name:        "third-role",
+				Description: "Pick the role that you want to delete",
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Required:    false,
+			},
+			{
+				Name:        "fourth-role",
+				Description: "Pick the role that you want to delete",
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Required:    false,
+			},
+			{
+				Name:        "fifth-role",
+				Description: "Pick the role that you want to delete",
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Required:    false,
+			},
+			{
+				Name:        "sixth-role",
+				Description: "Pick the role that you want to delete",
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Required:    false,
+			},
+			{
+				Name:        "seventh-role",
+				Description: "Pick the role that you want to delete",
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Required:    false,
+			},
+			{
+				Name:        "eight-role",
+				Description: "Pick the role that you want to delete",
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Required:    false,
+			},
+			{
+				Name:        "ninth-role",
+				Description: "Pick the role that you want to delete",
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Required:    false,
+			},
+			{
+				Name:        "tenth-role",
+				Description: "Pick the role that you want to delete",
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Required:    false,
+			},
+		},
+	}
+
+	commandAddRole := &discordgo.ApplicationCommand{
+		Name:        "add-role",
+		Description: "Add a specific role(s) to a user",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Name:        "pick-a-user",
+				Description: "Pick the role that you want to add",
+				Type:        discordgo.ApplicationCommandOptionUser,
+				Required:    true,
+			},
+			{
+				Name:        "first-role",
+				Description: "Pick the role that you want to add",
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Required:    true,
+			},
+			{
+				Name:        "second-role",
+				Description: "Pick the role that you want to add",
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Required:    false,
+			},
+			{
+				Name:        "third-role",
+				Description: "Pick the role that you want to add",
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Required:    false,
+			},
+			{
+				Name:        "fourth-role",
+				Description: "Pick the role that you want to add",
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Required:    false,
+			},
+			{
+				Name:        "fifth-role",
+				Description: "Pick the role that you want to add",
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Required:    false,
+			},
+		},
+	}
+
+	commandRemoveRole := &discordgo.ApplicationCommand{
+		Name:        "remove-role",
+		Description: "Remove a specific role(s) from a user",
+		Options: []*discordgo.ApplicationCommandOption{
+			{
+				Name:        "pick-a-user",
+				Description: "Pick the role that you want to remove from a user",
+				Type:        discordgo.ApplicationCommandOptionUser,
+				Required:    true,
+			},
+			{
+				Name:        "first-role",
+				Description: "Pick the role that you want to remove from a user",
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Required:    true,
+			},
+			{
+				Name:        "second-role",
+				Description: "Pick the role that you want to remove from a user",
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Required:    false,
+			},
+			{
+				Name:        "third-role",
+				Description: "Pick the role that you want to remove from a user",
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Required:    false,
+			},
+			{
+				Name:        "fourth-role",
+				Description: "Pick the role that you want to remove from a user",
+				Type:        discordgo.ApplicationCommandOptionRole,
+				Required:    false,
+			},
+			{
+				Name:        "fifth-role",
+				Description: "Pick the role that you want to remove from a user",
+				Type:        discordgo.ApplicationCommandOptionRole,
 				Required:    false,
 			},
 		},
@@ -250,6 +407,18 @@ func main() {
 	if err != nil {
 		fmt.Printf("Error adding command: %s\n", err.Error())
 	}
+	cmdCommandDeleteRole, err := discord.ApplicationCommandCreate(discord.State.User.ID, config.GuildID, commandDeleteRole)
+	if err != nil {
+		fmt.Printf("Error adding command: %s\n", err.Error())
+	}
+	cmdCommandAddRole, err := discord.ApplicationCommandCreate(discord.State.User.ID, config.GuildID, commandAddRole)
+	if err != nil {
+		fmt.Printf("Error adding command: %s\n", err.Error())
+	}
+	cmdCommandRemoveRole, err := discord.ApplicationCommandCreate(discord.State.User.ID, config.GuildID, commandRemoveRole)
+	if err != nil {
+		fmt.Printf("Error adding command: %s\n", err.Error())
+	}
 
 	// Block until we get ctrl-c
 	fmt.Println("Bot running. Press CTRL-C to exit.")
@@ -276,6 +445,18 @@ func main() {
 	if err != nil {
 		fmt.Printf("Error removing command: %s\n", err.Error())
 	}
+	err = discord.ApplicationCommandDelete(discord.State.User.ID, config.GuildID, cmdCommandDeleteRole.ID)
+	if err != nil {
+		fmt.Printf("Error removing command: %s\n", err.Error())
+	}
+	err = discord.ApplicationCommandDelete(discord.State.User.ID, config.GuildID, cmdCommandAddRole.ID)
+	if err != nil {
+		fmt.Printf("Error removing command: %s\n", err.Error())
+	}
+	err = discord.ApplicationCommandDelete(discord.State.User.ID, config.GuildID, cmdCommandRemoveRole.ID)
+	if err != nil {
+		fmt.Printf("Error removing command: %s\n", err.Error())
+	}
 	discord.Close()
 }
 
@@ -294,6 +475,12 @@ func (dh *discordHandler) command(s *discordgo.Session, i *discordgo.Interaction
 			handleRating(s, i)
 		case "delete-channel":
 			handleDeletingChannels(s, i)
+		case "delete-role":
+			handleDeletingRoles(s, i)
+		case "add-role":
+			handleAddingRoles(s, i)
+		case "remove-role":
+			handleRemovingRoles(s, i)
 		default:
 			Respond(s, i, "WHO ARE YOU? DIDN'T READ, LOL")
 		}
@@ -429,9 +616,13 @@ func handleCreateTeam(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		options := i.ApplicationCommandData().Options
 		roleName := options[0].StringValue()
 		color := getRandomColor()
-		ParentIDDiscordServer := "0"
-		ParentIDChannelText := "0"
-		ParentIDVoiceText := "0"
+		ParentIDDiscordServer := "1324420941190529149"
+		var ParentIDChannelText string
+		var ParentIDVoiceText string
+		var ParentIDBOT_bath string
+		var ParentIDBOT_owo string
+		var ParentIDBOT_skillissue string
+		var ParentIDBOT_elitebotix string
 
 		// json
 		fileBytes, err := ioutil.ReadFile("./discord_settings.json")
@@ -446,22 +637,22 @@ func handleCreateTeam(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			panic(err)
 		}
 
-		// fmt.Println("ID of Discord Server:", ids.ParentIDDiscordServer)
-		// fmt.Println("ID of Text Channel:", ids.ParentIDChannelText)
-		// fmt.Println("ID of Voice Channel:", ids.ParentIDVoiceText)
-
-		// fmt.Println("[orig] ParentIDChannelText - ", ParentIDChannelText)
-		// fmt.Println("[orig] ParentIDVoiceText - ", ParentIDVoiceText)
-
 		if ParentIDDiscordServer == ids.ParentIDDiscordServer {
-			fmt.Println("yup, all good")
+			fmt.Println("[Good] Found: ParentIDDiscordServer - ", ParentIDDiscordServer)
 			ParentIDChannelText = ids.ParentIDChannelText
 			ParentIDVoiceText = ids.ParentIDVoiceText
-			fmt.Println("[yup] ParentIDChannelText - ", ParentIDChannelText)
-			fmt.Println("[yup] ParentIDVoiceText - ", ParentIDVoiceText)
-		} else {
-			fmt.Println("[bad] ID of Discord Server is different from ID from discord_settings.json file. Text category and voice category are going to be at the firsts categories")
+			ParentIDBOT_bath = ids.ParentIDBOT_bath
+			ParentIDBOT_owo = ids.ParentIDBOT_owo
+			ParentIDBOT_skillissue = ids.ParentIDBOT_skillissue
+			ParentIDBOT_elitebotix = ids.ParentIDBOT_elitebotix
+			fmt.Println(ParentIDBOT_bath)
+			fmt.Println(ParentIDBOT_owo)
+			fmt.Println(ParentIDBOT_skillissue)
+			fmt.Println(ParentIDBOT_elitebotix)
 
+		} else {
+			fmt.Println("[Bad] ID Guild is different from ID from discord_settings.json file. Text category and voice category are going to be at the firsts categories")
+			// find first voice category at the discord server
 			channels, err := s.GuildChannels(i.GuildID)
 			if err != nil {
 				fmt.Println("error retrieving channels,", err)
@@ -475,7 +666,7 @@ func handleCreateTeam(s *discordgo.Session, i *discordgo.InteractionCreate) {
 			}
 
 			// holding first category
-			var firstCategory *discordgo.Channel
+			var firstTextCategory *discordgo.Channel
 			var firstVoiceCategory *discordgo.Channel
 
 			// voice category
@@ -501,31 +692,31 @@ func handleCreateTeam(s *discordgo.Session, i *discordgo.InteractionCreate) {
 				fmt.Println("No categories found for voice")
 			}
 
-			// text category
+			// find first text category at the discord server
 			for _, textchannel := range textchannels {
 				if textchannel.Type == discordgo.ChannelTypeGuildCategory {
 					// check if it has any text channels
 					for _, child := range channels {
 						if child.ParentID == textchannel.ID && child.Type == discordgo.ChannelTypeGuildText {
-							firstCategory = textchannel
+							firstTextCategory = textchannel
 							break
 						}
 					}
-					if firstCategory != nil {
+					if firstTextCategory != nil {
 						break // stop after finding first category
 					}
 				}
 			}
 
 			// check
-			if firstCategory != nil {
+			if firstTextCategory != nil {
 				fmt.Println("First Category Found:")
-				fmt.Println("TextID:", firstCategory.ID)
+				fmt.Println("TextID:", firstTextCategory.ID)
 			} else {
 				fmt.Println("No categories found for text")
 			}
 
-			ParentIDChannelText = firstCategory.ID
+			ParentIDChannelText = firstTextCategory.ID
 			ParentIDVoiceText = firstVoiceCategory.ID
 
 		}
@@ -592,11 +783,37 @@ func handleCreateTeam(s *discordgo.Session, i *discordgo.InteractionCreate) {
 
 			default:
 				fmt.Println("role dropped")
+				permissions := int64(discordgo.PermissionAttachFiles | discordgo.PermissionMentionEveryone | discordgo.PermissionEmbedLinks | discordgo.PermissionManageMessages | discordgo.PermissionUseSlashCommands)
 				user := options[j].UserValue(s)
-				err = s.GuildMemberRoleAdd(i.GuildID, user.ID, role.ID)
+
+				botIDs := []string{
+					ids.ParentIDBOT_bath,
+					ids.ParentIDBOT_owo,
+					ids.ParentIDBOT_skillissue,
+					ids.ParentIDBOT_elitebotix,
+				}
+
+				// edit role after it was created
+				updatedRole, err := s.GuildRoleEdit(i.GuildID, role.ID, &discordgo.RoleParams{
+					Permissions: &permissions,
+				})
+				if err != nil {
+					log.Println("Error editing role: ", err)
+					return
+				}
+
+				err = s.GuildMemberRoleAdd(i.GuildID, user.ID, updatedRole.ID)
 				if err != nil {
 					log.Println("Error adding role to member: ", err)
 					return
+				}
+
+				for _, botID := range botIDs {
+					err = s.GuildMemberRoleAdd(i.GuildID, botID, updatedRole.ID)
+					if err != nil {
+						log.Println("Error adding role to a bot: ", err)
+						return
+					}
 				}
 
 			}
@@ -1020,7 +1237,7 @@ func handleDeletingChannels(s *discordgo.Session, i *discordgo.InteractionCreate
 		options := i.ApplicationCommandData().Options
 		var channelIDs []string
 
-		// extracting
+		// extract id of the channel
 		for _, option := range options {
 			if option.Type == discordgo.ApplicationCommandOptionChannel {
 				channelIDs = append(channelIDs, option.ChannelValue(s).ID) // getting the id
@@ -1035,7 +1252,125 @@ func handleDeletingChannels(s *discordgo.Session, i *discordgo.InteractionCreate
 			}
 		}
 
-		Respond(s, i, "Channels deleted successfully!")
+		Respond(s, i, "Deleted successfully!")
+	} else {
+		Respond(s, i, "You don't have access to do that!")
+	}
+}
+
+func handleDeletingRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	RespondForThinking(s, i)
+	member, err := s.GuildMember(i.GuildID, i.Member.User.ID)
+	if err != nil {
+		fmt.Println("error retrieving member,", err)
+		return
+	}
+
+	if hasRole(member.Roles, "Секретарь ЦК импрува", s, i.GuildID) {
+
+		options := i.ApplicationCommandData().Options
+		protected := "Секретарь ЦК импрува"
+		var roleIDs []string
+
+		// extract id of the role
+		for _, option := range options {
+			if option.Type == discordgo.ApplicationCommandOptionRole {
+				role := option.RoleValue(s, i.GuildID)
+				if role.Name == protected {
+					Respond(s, i, "You can't delete that role!")
+					return
+				}
+				if role != nil {
+					roleIDs = append(roleIDs, role.ID)
+				}
+			}
+		}
+
+		// delete role
+		for _, roleID := range roleIDs {
+			err := s.GuildRoleDelete(i.GuildID, roleID)
+			if err != nil {
+				fmt.Println("Error deleting role: ", roleID, "Error: ", err)
+				continue
+			}
+		}
+
+		Respond(s, i, "Deleted successfully!")
+	} else {
+		Respond(s, i, "You don't have access to do that!")
+	}
+}
+
+func handleAddingRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	RespondForThinking(s, i)
+
+	if hasRole(i.Member.Roles, "Секретарь ЦК импрува", s, i.GuildID) {
+		options := i.ApplicationCommandData().Options
+		var roleIDs []string
+		var targetUserID string
+
+		// extract id of the role
+		for _, option := range options {
+			if option.Type == discordgo.ApplicationCommandOptionRole {
+				role := option.RoleValue(s, i.GuildID)
+				if role != nil {
+					roleIDs = append(roleIDs, role.ID)
+				}
+			} else if option.Type == discordgo.ApplicationCommandOptionUser {
+				targetUserID = option.UserValue(s).ID
+			}
+		}
+
+		// adding role
+		for _, roleID := range roleIDs {
+			err := s.GuildMemberRoleAdd(i.GuildID, targetUserID, roleID)
+			if err != nil {
+				fmt.Println("Error adding role to user: ", roleID, targetUserID, "Error: ", err)
+				continue
+			}
+		}
+
+		Respond(s, i, "Added successfully!")
+	} else {
+		Respond(s, i, "You don't have access to do that!")
+	}
+}
+
+func handleRemovingRoles(s *discordgo.Session, i *discordgo.InteractionCreate) {
+	RespondForThinking(s, i)
+
+	if hasRole(i.Member.Roles, "Секретарь ЦК импрува", s, i.GuildID) {
+		options := i.ApplicationCommandData().Options
+		protected := "Секретарь ЦК импрува"
+		var roleIDs []string
+		var targetUserID string
+
+		// extract id of the role
+		for _, option := range options {
+			if option.Type == discordgo.ApplicationCommandOptionRole {
+				role := option.RoleValue(s, i.GuildID)
+				if role.Name == protected {
+					Respond(s, i, "You can't remove that role!")
+					return
+				}
+				if role != nil {
+					roleIDs = append(roleIDs, role.ID)
+				}
+			} else if option.Type == discordgo.ApplicationCommandOptionUser {
+				targetUserID = option.UserValue(s).ID
+			}
+		}
+
+		// removing
+		for _, roleID := range roleIDs {
+			err := s.GuildMemberRoleRemove(i.GuildID, targetUserID, roleID)
+			if err != nil {
+				fmt.Println("Error removing role from user: ", roleID, targetUserID, "Error: ", err)
+				continue
+			}
+		}
+
+		Respond(s, i, "Removed successfully!")
 	} else {
 		Respond(s, i, "You don't have access to do that!")
 	}
